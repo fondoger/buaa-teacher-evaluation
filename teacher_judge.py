@@ -2,9 +2,33 @@ import requests
 from bs4 import BeautifulSoup
 from collections import defaultdict
 
+session = requests.Session()
+jiaowu_url = 'http://10.200.21.61:7001/ieas2.1/'
+# use '/login' instead of '/login/' to avoid redirects
+login_url = 'https://sso.buaa.edu.cn/login'
 
+def get_login_token() -> str:
+    r = session.get(login_url)
+    assert(r.status_code == 200)
+    soup = BeautifulSoup(r.content, 'html.parser')
+    lt = soup.find('input', {'name': 'lt'})['value']
+    return lt
 
-def judge_item(teacher):
+def login(username: str, password: str) -> bool:
+    formdata = {
+        'username': username,
+        'password': password,
+        'code': '',
+        'lt': get_login_token(),
+        'execution': 'e1s1',
+        '_eventId': 'submit',
+        'submit': '登陆'
+    }
+    r2 = session.post(login_url, data=formdata, allow_redirects=False)
+    assert(r2.status_code == 200)
+    return 'Set-Cookie' in r2.headers
+
+def assess_item(teacher: "beautifulSoup object"):
     print('judging teacher %s...' % teacher.string)
     course_id = list(teacher.parents)[2]['rwh_id']
     teacher_info = teacher['onclick'].split("'")   
@@ -40,31 +64,30 @@ def judge_item(teacher):
     r2 = session.post('http://10.200.21.61:7001/ieas2.1/xspj/saveXspj',
                       data=form_data2)
     if r2.status_code != 200:
-        print('failed! De2tails:', r2.status_code, form_data2)
+        print('failed! Details:', r2.status_code, form_data2)
         return
     print('success!')
 
-
-def auto_judge():
-        
-    session = requests.Session()
-    session.headers = {
-        'Cookie': 'JSESSIONID=2f88b1mLwrV8Yx9SyDh1yLJQzQJzR1HF9qPCKPql63LMTXfgpnl5!-822511665'
-    }
+def auto_evaluation():
     res = session.get("http://10.200.21.61:7001/ieas2.1/xspj/Fxpj_fy", 
                        allow_redirects=False)
     if res.status_code != 200:
         print("can't load page")
         exit()
-    
     soup = BeautifulSoup(res.content, 'html.parser')
     yellow_spans = soup.find_all('span', class_='yellow')
     teachers = []
     for span in yellow_spans:
-        teachers += span.find_all('a')
-    
+        teachers += span.find_all('a')   
     for teacher in teachers:
-        # print(teacher.prettify())
-        judge_item(teacher)
+        assess_item(teacher)
 
+def auto_judge():
+	username = input('请输入统一认证登陆账号：')
+	password = input('请输入统一认证登陆密码：')
+	if login(username, password) == True:
+		auto_evaluation()
+	else:
+		print("账号或者密码错误(请确保连入校园网)")
+	
 auto_judge()
