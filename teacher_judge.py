@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 from collections import defaultdict
 
 session = requests.Session()
-jiaowu_url = 'http://10.200.21.61:7001/ieas2.1/'
+jiaowu_url = 'http://10.200.21.61:7001/ieas2.1'
 # use '/login' instead of '/login/' to avoid redirects
 login_url = 'https://sso.buaa.edu.cn/login'
 
@@ -29,7 +29,7 @@ def login(username: str, password: str) -> bool:
     return 'Set-Cookie' in r2.headers
 
 def assess_item(teacher: "beautifulSoup object"):
-    print('judging teacher %s...' % teacher.string)
+    print('evaluate teacher %s...' % teacher.string)
     course_id = list(teacher.parents)[2]['rwh_id']
     teacher_info = teacher['onclick'].split("'")   
     teacher_id = teacher_info[1]
@@ -41,46 +41,39 @@ def assess_item(teacher: "beautifulSoup object"):
         'kcdm': '',
         'pageXnxq': ''
     }
-    r = session.post("http://10.200.21.61:7001/ieas2.1/xspj/toAddPjjs", 
+    r = session.post(jiaowu_url + "/xspj/toAddPjjs", 
                      data=form_data)
-    if r.status_code != 200:
-        print('failed! Details:', r.status_code, teacher_id, course_id, pjcs)
-        return
+    assert(r.status_code == 200)
     s = BeautifulSoup(r.content, "html.parser")
     form = s.find('form', id='queryform')
     entries = form.find_all('input', type='hidden')
     form_data2 = defaultdict(list)
     for entry in entries:
-        if not entry.has_attr('name'):
-            continue
-        form_data2[entry['name']].append(entry['value'])
+        if entry.has_attr('name'):
+            form_data2[entry['name']].append(entry['value'])
     entries = form.find_all('input', id='zbdm')
     for i, entry in enumerate(entries):
-        # option = entry.td.input
         option = entry.find_next_sibling('td').input
         if i == 0:
             option = option.find_next_sibling('input')
         form_data2[option['name']].append(option['value'])
-    r2 = session.post('http://10.200.21.61:7001/ieas2.1/xspj/saveXspj',
+    r2 = session.post(jiaowu_url + '/xspj/saveXspj',
                       data=form_data2)
-    if r2.status_code != 200:
-        print('failed! Details:', r2.status_code, form_data2)
-        return
+    assert(r2.status_code == 200)
     print('success!')
 
 def auto_evaluation():
-    res = session.get("http://10.200.21.61:7001/ieas2.1/xspj/Fxpj_fy", 
-                       allow_redirects=False)
-    if res.status_code != 200:
-        print("can't load page")
-        exit()
-    soup = BeautifulSoup(res.content, 'html.parser')
+    r = session.get(jiaowu_url + '/xspj/Fxpj_fy', 
+                    allow_redirects=False)
+    assert(r.status_code == 200)
+    soup = BeautifulSoup(r.content, 'html.parser')
     yellow_spans = soup.find_all('span', class_='yellow')
     teachers = []
     for span in yellow_spans:
         teachers += span.find_all('a')   
     for teacher in teachers:
         assess_item(teacher)
+    print("all job done!")
 
 def auto_judge():
 	username = input('请输入统一认证登陆账号：')
