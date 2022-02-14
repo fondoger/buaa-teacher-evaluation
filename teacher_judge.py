@@ -1,18 +1,23 @@
 import requests
 from bs4 import BeautifulSoup
 from collections import defaultdict
+from urllib.parse import quote
+
 
 session = requests.Session()
-jiaowu_url = 'http://10.200.21.61:7001/ieas2.1'
+page_xnxq = ''
+
+jiaowu_url = 'http://jwxt.buaa.edu.cn:8080/ieas2.1/'
 # use '/login' instead of '/login/' to avoid redirects
-login_url = 'https://sso.buaa.edu.cn/login?service=http%3A%2F%2F10.200.21.61%3A7001%2Fieas2.1%2Fwelcome'
+login_url = 'https://sso.buaa.edu.cn/login?service=' \
+            + quote(jiaowu_url, 'utf-8') + 'welcome'
 
 
 def get_login_token() -> str:
     r = session.get(login_url)
     assert (r.status_code == 200)
     soup = BeautifulSoup(r.content, 'html.parser')
-    lt = soup.find('input', {'name': 'lt'})['value']
+    lt = soup.find('input', {'name': 'execution'})['value']
     return lt
 
 
@@ -20,9 +25,8 @@ def login(username: str, password: str) -> bool:
     formdata = {
         'username': username,
         'password': password,
-        'code': '',
-        'lt': get_login_token(),
-        'execution': 'e1s1',
+        'execution': get_login_token(),
+        'type': 'username_password',
         '_eventId': 'submit',
         'submit': '登陆'
     }
@@ -42,9 +46,9 @@ def assess_item(teacher: "beautifulSoup object"):
         'zgh': teacher_id,
         'pjcs': pjcs,
         'kcdm': '',
-        'pageXnxq': ''
+        'pageXnxq': page_xnxq
     }
-    r = session.post(jiaowu_url + "/xspj/toAddPjjs",
+    r = session.post(jiaowu_url + "xspj/toAddPjjs",
                      data=form_data)
     assert (r.status_code == 200)
     s = BeautifulSoup(r.content, "html.parser")
@@ -60,19 +64,21 @@ def assess_item(teacher: "beautifulSoup object"):
         if i == 0:
             option = option.find_next_sibling('input')
         form_data2[option['name']].append(option['value'])
-    r2 = session.post(jiaowu_url + '/xspj/saveXspj',
+    r2 = session.post(jiaowu_url + 'xspj/saveXspj',
                       data=form_data2)
     assert (r2.status_code == 200)
     print('success!')
 
 
 def auto_evaluation():
-    r = session.get(jiaowu_url + '/xspj/Fxpj_fy',
+    global page_xnxq
+    r = session.get(jiaowu_url + 'xspj/Fxpj_fy',
                     allow_redirects=False)
     assert (r.status_code == 200)
     soup = BeautifulSoup(r.content, 'html.parser')
     yellow_spans = soup.find_all('span', class_='yellow')
     teachers = []
+    page_xnxq = soup.find('select', id='xnxq').find('option', selected=True)['value']
     for span in yellow_spans:
         teachers += span.find_all('a')
     for teacher in teachers:
@@ -81,6 +87,8 @@ def auto_evaluation():
 
 
 def auto_judge():
+    print('《北航自动评教脚本》')
+    print('请确保在校园网环境下或访问 https://vpn.buaa.edu.cn/ 下载客户端VPN')
     username = input('请输入统一认证登陆账号：')
     password = input('请输入统一认证登陆密码：')
     if login(username, password):
