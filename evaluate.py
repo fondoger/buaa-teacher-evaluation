@@ -1,8 +1,9 @@
+# -*- coding: utf-8 -*-
 import requests
 from bs4 import BeautifulSoup
 from collections import defaultdict
 from urllib.parse import quote
-
+from getpass import getpass
 
 session = requests.Session()
 page_xnxq = ''
@@ -50,7 +51,7 @@ def assess_item(teacher: "beautifulSoup object"):
     }
     r = session.post(jiaowu_url + "xspj/toAddPjjs",
                      data=form_data)
-    assert (r.status_code == 200)
+    r.raise_for_status()
     s = BeautifulSoup(r.content, "html.parser")
     form = s.find('form', id='queryform')
     entries = form.find_all('input', type='hidden')
@@ -66,15 +67,15 @@ def assess_item(teacher: "beautifulSoup object"):
         form_data2[option['name']].append(option['value'])
     r2 = session.post(jiaowu_url + 'xspj/saveXspj',
                       data=form_data2)
-    assert (r2.status_code == 200)
-    print('success!')
+    r2.raise_for_status()
+    print('评教成功！')
 
 
 def auto_evaluation():
     global page_xnxq
     r = session.get(jiaowu_url + 'xspj/Fxpj_fy',
                     allow_redirects=False)
-    assert (r.status_code == 200)
+    r.raise_for_status()
     soup = BeautifulSoup(r.content, 'html.parser')
     yellow_spans = soup.find_all('span', class_='yellow')
     teachers = []
@@ -83,18 +84,17 @@ def auto_evaluation():
         teachers += span.find_all('a')
     for teacher in teachers:
         assess_item(teacher)
-    print("all job done!")
+    print("所有评教已完成！")
 
 
 def auto_judge():
-    print('《北航自动评教脚本》')
-    print('请确保在校园网环境下或访问 https://vpn.buaa.edu.cn/ 下载客户端VPN')
-    username = input('请输入统一认证登陆账号：')
-    password = input('请输入统一认证登陆密码：')
+    username = input("请输入统一认证登录账号：")
+    password = getpass("请输入统一认证登录密码（不会显示）：")
     if login(username, password):
         auto_evaluation()
     else:
-        print("账号或者密码错误(请确保连入校园网)")
+        print("账号或密码错误（请确保连入校园网）")
 
 
-auto_judge()
+if __name__ == '__main__':
+    auto_judge()
