@@ -2,7 +2,7 @@
 =======
 
 北航有个奇怪要求，不评教不能查看成绩。但是，这么多教师，每个教师还有好多个选项，全部评价完需要10来分钟。
-故写一段python脚本，完成该功能。
+故写一段Python脚本，完成该功能。
 
 ## 安装依赖及运行
 
@@ -10,7 +10,7 @@
 
 ```powershell
 pip install -r requirements.txt
-python teacher_judge.py
+python evaluate.py
 ```
 
 ## 功能简介
