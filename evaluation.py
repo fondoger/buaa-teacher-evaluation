@@ -61,77 +61,41 @@ browser.find_element(By.XPATH,
                      '//*[@id="app"]/div/div[2]/div[1]/div/div/div[1]/div[2]/table/tbody/tr/td[9]/div/div/button').click()
 browser.implicitly_wait(5)
 
-# 理论课
-try:
-    element = browser.find_element(
-        By.XPATH, '//*[@id="app"]/div/div[2]/div/div/div/div[1]/div[2]/table/tbody/tr[1]/td[6]/div/div/button[1]')
-    if element.text == '去评价':
-        element.click()
-        elements = browser.find_elements(
-            By.CSS_SELECTOR, '.ivu-btn-primary')
-        while len(elements) > 0:
-            item = elements.pop(0)
-            item.click()
-            browser.implicitly_wait(5)
-            arr = [1, 1, 2, 2, 3, 3]
-            for i in range(1, 7):
-                index = random.randint(0, len(arr)-1)
-                choice = arr.pop(index)
-                browser.find_element(
-                    By.XPATH, f'//*[@id="app"]/div/div/div[2]/div/div[1]/div/div[2]/div/div[{i}]/div/div/div[3]/div[2]/div/label[{choice}]/span[1]/input').click()
-            browser.find_element(
-                By.XPATH, '//*[@id="app"]/div/div/div[3]/button[2]').click()
-            wait.until(EC.presence_of_element_located((
-                By.CLASS_NAME, 'ivu-modal-content')))
-            browser.find_element(
-                By.CSS_SELECTOR, 'body > div:nth-child(6) > div.ivu-modal-wrap > div > div > div > div > div.ivu-modal-confirm-footer > button.ivu-btn.ivu-btn-primary').click()
-            wait.until(EC.presence_of_element_located((
-                By.XPATH, '//*[@id="app"]/div/div[2]/div[2]/button')))
-            sleep(1)
+for outer_item in range(1, 5):
+    try:
+        element = browser.find_element(
+            By.XPATH, f'//*[@id="app"]/div/div[2]/div/div/div/div[1]/div[2]/table/tbody/tr[{outer_item}]/td[6]/div/div/button[1]')
+        if element.text == '去评价':
+            element.click()
             elements = browser.find_elements(
                 By.CSS_SELECTOR, '.ivu-btn-primary')
-            browser.find_element(
-                By.XPATH, '//*[@id="app"]/div/div[2]/div[2]/button').click()
-except Exception as e:
-    print(e)
-finally:
-    print('理论课评教完成')
-
-# 体育课
-try:
-    element = browser.find_element(
-        By.XPATH, '//*[@id="app"]/div/div[2]/div/div/div/div[1]/div[2]/table/tbody/tr[2]/td[6]/div/div/button[1]')
-    if element.text == '去评价':
-        element.click()
-        elements = browser.find_elements(
-            By.CSS_SELECTOR, '.ivu-btn-primary')
-        while len(elements) > 0:
-            item = elements.pop(0)
-            item.click()
-            browser.implicitly_wait(5)
-            arr = [1, 1, 1, 2, 2, 3, 3]
-            for i in range(1, 8):
-                index = random.randint(0, len(arr)-1)
-                choice = arr.pop(index)
+            while len(elements) > 0:
+                item = elements.pop(0)
+                item.click()
+                browser.implicitly_wait(5)
+                arr = [1, 1, 2, 2, 3, 3]
+                for i in range(1, 7):
+                    index = random.randint(0, len(arr)-1)
+                    choice = arr.pop(index)
+                    browser.find_element(
+                        By.XPATH, f'//*[@id="app"]/div/div/div[2]/div/div[1]/div/div[2]/div/div[{i}]/div/div/div[3]/div[2]/div/label[{choice}]/span[1]/input').click()
                 browser.find_element(
-                    By.XPATH, f'//*[@id="app"]/div/div/div[2]/div/div[1]/div/div[2]/div/div[{i}]/div/div/div[3]/div[2]/div/label[{choice}]/span[1]/input').click()
-            browser.find_element(
-                By.XPATH, '//*[@id="app"]/div/div/div[3]/button[2]').click()
-            wait.until(EC.presence_of_element_located((
-                By.CLASS_NAME, 'ivu-modal-content')))
-            browser.find_element(
-                By.CSS_SELECTOR, 'body > div:nth-child(6) > div.ivu-modal-wrap > div > div > div > div > div.ivu-modal-confirm-footer > button.ivu-btn.ivu-btn-primary').click()
-            wait.until(EC.presence_of_element_located((
-                By.XPATH, '//*[@id="app"]/div/div[2]/div[2]/button')))
-            sleep(1)
-            elements = browser.find_elements(
-                By.CSS_SELECTOR, '.ivu-btn-primary')
+                    By.XPATH, '//*[@id="app"]/div/div/div[3]/button[2]').click()
+                wait.until(EC.presence_of_element_located((
+                    By.CLASS_NAME, 'ivu-modal-content')))
+                browser.find_element(
+                    By.CSS_SELECTOR, 'body > div:nth-child(6) > div.ivu-modal-wrap > div > div > div > div > div.ivu-modal-confirm-footer > button.ivu-btn.ivu-btn-primary').click()
+                wait.until(EC.presence_of_element_located((
+                    By.XPATH, '//*[@id="app"]/div/div[2]/div[2]/button')))
+                sleep(1)
+                elements = browser.find_elements(
+                    By.CSS_SELECTOR, '.ivu-btn-primary')
             browser.find_element(
                 By.XPATH, '//*[@id="app"]/div/div[2]/div[2]/button').click()
-except Exception as e:
-    print(e)
-finally:
-    print('体育课评教完成')
+    except Exception as e:
+        print(e)
+    finally:
+        print(f'课程类型{outer_item}评教完成')
 
 
 print('评教完成')
