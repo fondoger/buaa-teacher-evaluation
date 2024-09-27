@@ -16,7 +16,7 @@ login_url = 'https://sso.buaa.edu.cn/login?service=' \
 
 def get_login_token() -> str:
     r = session.get(login_url)
-    assert (r.status_code == 200)
+    r.raise_for_status()
     soup = BeautifulSoup(r.content, 'html.parser')
     lt = soup.find('input', {'name': 'execution'})['value']
     return lt
